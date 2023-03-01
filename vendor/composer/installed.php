@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'corneltek/pux',
-        'pretty_version' => '1.6.1',
-        'version' => '1.6.1.0',
+        'pretty_version' => '1.7.0',
+        'version' => '1.7.0.0',
         'reference' => NULL,
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
@@ -58,8 +58,8 @@
             'dev_requirement' => true,
         ),
         'corneltek/pux' => array(
-            'pretty_version' => '1.6.1',
-            'version' => '1.6.1.0',
+            'pretty_version' => '1.7.0',
+            'version' => '1.7.0.0',
             'reference' => NULL,
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
