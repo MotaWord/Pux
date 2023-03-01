@@ -17,10 +17,10 @@ class Executor
      */
     public static function execute(array $route)
     {
-        list($pcre, $pattern, $cb, $options) = $route;
+        [$pcre, $pattern, $cb, $options] = $route;
 
         // create the reflection class
-        $rc = new ReflectionClass( $cb[0] );
+        $reflectionClass = new ReflectionClass( $cb[0] );
 
         $constructArgs = null;
         if (isset($options['constructor_args'])) {
@@ -30,32 +30,31 @@ class Executor
         // if the first argument is a class name string,
         // then create the controller object.
         if (is_string($cb[0])) {
-            $cb[0] = $controller = $constructArgs ? $rc->newInstanceArgs($constructArgs) : $rc->newInstance();
+            $cb[0] = $constructArgs ? $reflectionClass->newInstanceArgs($constructArgs) : $reflectionClass->newInstance();
+            $controller = $constructArgs ? $reflectionClass->newInstanceArgs($constructArgs) : $reflectionClass->newInstance();
         } else {
             $controller = $cb[0];
         }
 
         // check controller action method
         if ($controller && ! method_exists( $controller ,$cb[1])) {
-            throw new LogicException("Controller action method '{$cb[1]}' doesn't exist.");
+            throw new LogicException(sprintf('Controller action method \'%s\' doesn\'t exist.', $cb[1]));
             /*
             throw new Exception('Method ' .
                 get_class($controller) . "->{$cb[1]} does not exist.", $route );
              */
         }
 
-        $rps = $rc->getMethod($cb[1])->getParameters();
+        $rps = $reflectionClass->getMethod($cb[1])->getParameters();
 
         // XXX:
 
-        $vars = isset($options['vars'])
-                ? $options['vars']
-                : array()
+        $vars = $options['vars'] ?? []
                 ;
 
-        $arguments = array();
-        foreach ($rps as $param) {
-            $n = $param->getName();
+        $arguments = [];
+        foreach ($rps as $rp) {
+            $n = $rp->getName();
             if (isset( $vars[ $n ] ))
             {
                 $arguments[] = $vars[ $n ];
@@ -65,10 +64,11 @@ class Executor
             {
                 $arguments[] = $default;
             }
-            else if ( ! $param->isOptional() && ! $param->allowsNull() ) {
+            else if ( ! $rp->isOptional() && ! $rp->allowsNull() ) {
                 throw new Exception('parameter is not defined.');
             }
         }
+
         return call_user_func_array($cb, $arguments);
     }
 }

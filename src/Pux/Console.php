@@ -4,8 +4,14 @@ use CLIFramework\Application;
 
 class Console extends Application
 {
-    const NAME = 'phpux';
-    const VERSION = "1.6.1";
+    /**
+     * @var string
+     */
+    final const NAME = 'phpux';
+    /**
+     * @var string
+     */
+    final const VERSION = "1.6.1";
 
     public function init()
     {

@@ -12,18 +12,16 @@ class APCDispatcherTest extends PHPUnit_Framework_TestCase
         }
 
         $mux = new Mux;
-        $mux->add('/product/add', array('ProductController', 'addAction'));
-        $dispatcher = new APCDispatcher($mux, array(
-            'namespace' => 'tests',
-            'expiry' => 10,
-        ));
-        ok($dispatcher);
-        $route = $dispatcher->dispatch('/product/add');
+        $mux->add('/product/add', ['ProductController', 'addAction']);
+
+        $apcDispatcher = new APCDispatcher($mux, ['namespace' => 'tests', 'expiry' => 10]);
+        ok($apcDispatcher);
+        $route = $apcDispatcher->dispatch('/product/add');
         ok($route);
-        $route = $dispatcher->dispatch('/product/add');
+        $route = $apcDispatcher->dispatch('/product/add');
         ok($route);
 
-        $route = $dispatcher->dispatch('/product/del');
+        $route = $apcDispatcher->dispatch('/product/del');
         ok($route == false);
     }
 }

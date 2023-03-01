@@ -14,32 +14,34 @@ class Controller
     protected function parseMethodAnnotation($method)
     {
 
-        $annotations = array();
+        $annotations = [];
         $doc = $method->getDocComment();
         if ($doc) {
-            if (preg_match('/^[\s*]*\@Method\("(get|put|post|delete|head|patch|options)"\)/im', $doc, $regs)) {
+            if (preg_match('/^[\s*]*\@Method\("(get|put|post|delete|head|patch|options)"\)/im', (string) $doc, $regs)) {
                 $annotations['Method'] = $regs[1];
             }
-            if (preg_match('/^[\s*]*\@Route\("([^\s]*)"\)/im', $doc, $regs)) {
+
+            if (preg_match('/^[\s*]*\@Route\("([^\s]*)"\)/im', (string) $doc, $regs)) {
                 $annotations['Route'] = $regs[1];
             }
         }
+
         return $annotations;
     }
 
-    protected function parseMethods(ReflectionClass $refObject, & $args, $parent = 0)
+    protected function parseMethods(ReflectionClass $reflectionClass, & $args, $parent = 0)
     {
-        if ($pClassRef = $refObject->getParentClass()) {
-            $this->parseMethods($pClassRef, $args, 1);
+        if ($parentClass = $reflectionClass->getParentClass()) {
+            $this->parseMethods($parentClass, $args, 1);
         }
 
-        $methods = $refObject->getMethods();
+        $methods = $reflectionClass->getMethods();
         foreach( $methods as $method ) {
             if ( ! preg_match('/Action$/', $method->getName()) ) {
                 return;
             }
 
-            $meta = array( 'class' => $refObject->getName() );
+            $meta = ['class' => $reflectionClass->getName()];
             $anns = $this->parseMethodAnnotation($method);
             if (empty($anns)) {
                 // get parent method annotations
@@ -47,17 +49,18 @@ class Controller
                     $anns = $args[$method->getName()][0];
                 }
             }
+
             // override
-            $args[ $method->getName() ] = array( $anns, $meta );
+            $args[ $method->getName() ] = [$anns, $meta];
         }
     }
 
 
     public function getActionMethods()
     {
-        $refObject = new ReflectionClass($this);
-        $args = array();
-        $this->parseMethods($refObject, $args, 0);
+        $reflectionClass = new ReflectionClass($this);
+        $args = [];
+        $this->parseMethods($reflectionClass, $args, 0);
         return $args;
     }
 
@@ -73,10 +76,8 @@ class Controller
      */
     protected function translatePath($methodName)
     {
-        $methodName = preg_replace('/Action$/', '', $methodName);
-        return '/' . preg_replace_callback('/[A-Z]/', function($matches) {
-            return '/' . strtolower($matches[0]);
-        }, $methodName);
+        $methodName = preg_replace('/Action$/', '', (string) $methodName);
+        return '/' . preg_replace_callback('/[A-Z]/', static fn($matches) => '/' . strtolower($matches[0]), $methodName);
     }
 
 
@@ -87,11 +88,11 @@ class Controller
      */
     public function getActionRoutes()
     {
-        $pairs          = array();
+        $pairs          = [];
         $actions    = $this->getActionMethods();
 
         foreach ($actions as $actionName => $actionInfo) {
-            list($annotations, $meta) = $actionInfo;
+            [$annotations, $meta] = $actionInfo;
 
             if ( isset($annotations['Route']) ) {
                 $path = $annotations['Route'];
@@ -103,15 +104,17 @@ class Controller
                 }
             }
 
-            $pair = array($path, $actionName);
+            $pair = [$path, $actionName];
 
             if (isset($annotations['Method']) ) {
-                $pair[] = array( 'method' => Mux::getRequestMethodConstant($annotations['Method']) );
+                $pair[] = ['method' => Mux::getRequestMethodConstant($annotations['Method'])];
             } else {
-                $pair[] = array();
+                $pair[] = [];
             }
+
             $pairs[] = $pair;
         }
+
         return $pairs;
     }
 
@@ -125,15 +128,16 @@ class Controller
         $mux    = new Mux();
         $paths  = $this->getActionRoutes();
         foreach ($paths as $path) {
-            $mux->add($path[0], array(get_class($this), $path[1]), $path[2]);
+            $mux->add($path[0], [static::class, $path[1]], $path[2]);
         }
+
         $mux->sort();
         return $mux;
     }
 
     public function toJson($data)
     {
-        return json_encode($data);
+        return json_encode($data, JSON_THROW_ON_ERROR);
     }
 
 }

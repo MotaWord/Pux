@@ -1,0 +1,21 @@
+language: php
+php:
+- 5.6
+- 7.0
+- 7.1
+install:
+- travis_retry composer require satooshi/php-coveralls "^1" --no-update --dev
+- travis_retry composer install
+before_script:
+- phpenv rehash
+script:
+- phpunit --exclude-group upload -c phpunit.xml.dist
+after_success:
+- php vendor/bin/coveralls -v
+cache:
+  apt: true
+  directories:
+  - vendor
+notifications:
+  slack:
+    secure: TODp1zNi6k5PGJajxfmql4TpnXJeyyyySdk5l03VA1O3IOrUtCXVyj+rjdXG2wqZzAP+kR7rPcpM29ejlo+seI9uwPx5/iSHQ0SXudx9RPZRVL5vlo49BlJdIpXEUUhCTMOSUY92xwwoVfZRl8adnjvVWPCzXNmq+ofWNtRFpZU=

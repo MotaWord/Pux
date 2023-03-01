@@ -15,17 +15,17 @@ define('REQUEST_METHOD_OPTIONS', 7);
 
 class Mux
 {
-    public $routes = array();
+    public $routes = [];
 
-    public $staticRoutes = array();
+    public $staticRoutes = [];
 
-    public $routesById = array();
+    public $routesById = [];
 
 
     /**
      * @var Mux[id]
      */
-    public $submux = array();
+    public $submux = [];
 
     public $id;
 
@@ -55,25 +55,27 @@ class Mux
         if ( $this->id ) {
             return $this->id;
         }
+
         return $this->id = self::generate_id();
     }
 
-    public function appendRoute($pattern, $callback, array $options = array())
+    public function appendRoute($pattern, $callback, array $options = [])
     {
-        $this->routes[] = array( false, $pattern, $callback, $options );
+        $this->routes[] = [false, $pattern, $callback, $options];
     }
 
     public function appendPCRERoute(array $routeArgs, $callback)
     {
-        $this->routes[] = array(
-            true, // PCRE
+        $this->routes[] = [
+            true,
+            // PCRE
             $routeArgs['compiled'],
             $callback,
             $routeArgs,
-        );
+        ];
     }
 
-    public function mount($pattern, $mux, array $options = array())
+    public function mount($pattern, $mux, array $options = [])
     {
         if ($mux instanceof Controller) {
             $mux = $mux->expand();
@@ -82,7 +84,7 @@ class Mux
         }
 
         if ($this->expand) {
-            $pcre = strpos($pattern,':') !== false;
+            $pcre = str_contains((string) $pattern,':');
 
             // rewrite submux routes
             foreach ($mux->routes as $route) {
@@ -93,12 +95,7 @@ class Mux
                         array_replace_recursive($options, $route[3]) );
                     $this->appendPCRERoute( $routeArgs, $route[2] );
                 } else {
-                    $this->routes[] = array(
-                        false,
-                        $pattern . $route[1],
-                        $route[2],
-                        isset($route[3]) ? array_replace_recursive($options, $route[3]) : $options,
-                    );
+                    $this->routes[] = [false, $pattern . $route[1], $route[2], isset($route[3]) ? array_replace_recursive($options, $route[3]) : $options];
                 }
             }
         } else {
@@ -108,87 +105,85 @@ class Mux
         }
     }
 
-    public function delete($pattern, $callback, array $options = array())
+    public function delete($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_DELETE;
         $this->add($pattern, $callback, $options);
     }
 
-    public function put($pattern, $callback, array $options = array())
+    public function put($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_PUT;
         $this->add($pattern, $callback, $options);
     }
 
-    public function get($pattern, $callback, array $options = array())
+    public function get($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_GET;
         $this->add($pattern, $callback, $options);
     }
 
-    public function post($pattern, $callback, array $options = array())
+    public function post($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_POST;
         $this->add($pattern, $callback, $options);
     }
 
-    public function patch($pattern, $callback, array $options = array())
+    public function patch($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_PATCH;
         $this->add($pattern, $callback, $options);
     }
 
 
-    public function head($pattern, $callback, array $options = array())
+    public function head($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_HEAD;
         $this->add($pattern, $callback, $options);
     }
 
 
-    public function options($pattern, $callback, array $options = array())
+    public function options($pattern, $callback, array $options = [])
     {
         $options['method'] = REQUEST_METHOD_OPTIONS;
         $this->add($pattern, $callback, $options);
     }
 
-    public function any($pattern, $callback, array $options = array())
+    public function any($pattern, $callback, array $options = [])
     {
         $this->add($pattern, $callback, $options);
     }
 
-    public function add($pattern, $callback, array $options = array())
+    public function add($pattern, $callback, array $options = [])
     {
-        if ( is_string($callback) && strpos($callback,':') !== false ) {
+        if ( is_string($callback) && str_contains($callback,':') ) {
             $callback = explode(':', $callback);
         }
 
         // compile place holder to patterns
-        $pcre = strpos($pattern,':') !== false;
+        $pcre = str_contains((string) $pattern,':');
         if ( $pcre ) {
             $routeArgs = PatternCompiler::compile($pattern, $options);
 
             // generate a pcre pattern route
-            $route = array(
-                true, // PCRE
+            $route = [
+                true,
+                // PCRE
                 $routeArgs['compiled'],
                 $callback,
                 $routeArgs,
-            );
+            ];
             if ( isset($options['id']) ) {
                 $this->routesById[ $options['id'] ] = $route;
             }
+
             return $this->routes[] = $route;
         } else {
-            $route = array(
-                false,
-                $pattern,
-                $callback,
-                $options,
-            );
+            $route = [false, $pattern, $callback, $options];
             if ( isset($options['id']) ) {
                 $this->routesById[ $options['id'] ] = $route;
             }
+
             // generate a simple string route.
             return $this->routes[] = $route;
         }
@@ -203,21 +198,22 @@ class Mux
 
     public function sort()
     {
-        usort($this->routes, array('Pux\\MuxCompiler','sort_routes'));
+        usort($this->routes, \Pux\MuxCompiler::sort_routes(...));
     }
 
     static public function sort_routes($a, $b)
     {
         if ( $a[0] && $b[0] ) {
-            return strlen($a[3]['compiled']) > strlen($b[3]['compiled']);
+            return strlen((string) $a[3]['compiled']) > strlen((string) $b[3]['compiled']);
         } elseif ( $a[0] ) {
             return 1;
         } elseif ( $b[0] ) {
             return -1;
         }
-        if ( strlen($a[1]) > strlen($b[1]) ) {
+
+        if ( strlen((string) $a[1]) > strlen((string) $b[1]) ) {
             return 1;
-        } elseif ( strlen($a[1]) == strlen($b[1]) ) {
+        } elseif ( strlen((string) $a[1]) == strlen((string) $b[1]) ) {
             return 0;
         } else {
             return -1;
@@ -245,24 +241,16 @@ class Mux
 
     public static function getRequestMethodConstant($method)
     {
-        switch (strtoupper($method)) {
-            case "POST":
-                return REQUEST_METHOD_POST;
-            case "GET":
-                return REQUEST_METHOD_GET;
-            case "PUT":
-                return REQUEST_METHOD_PUT;
-            case "DELETE":
-                return REQUEST_METHOD_DELETE;
-            case "PATCH":
-                return REQUEST_METHOD_PATCH;
-            case "HEAD":
-                return REQUEST_METHOD_HEAD;
-            case "OPTIONS":
-                return REQUEST_METHOD_OPTIONS;
-            default:
-                return 0;
-        }
+        return match (strtoupper((string) $method)) {
+            "POST" => REQUEST_METHOD_POST,
+            "GET" => REQUEST_METHOD_GET,
+            "PUT" => REQUEST_METHOD_PUT,
+            "DELETE" => REQUEST_METHOD_DELETE,
+            "PATCH" => REQUEST_METHOD_PATCH,
+            "HEAD" => REQUEST_METHOD_HEAD,
+            "OPTIONS" => REQUEST_METHOD_OPTIONS,
+            default => 0,
+        };
     }
 
     public function match($path)
@@ -277,29 +265,36 @@ class Mux
 
         foreach( $this->routes as $route ) {
             if ( $route[0] ) {
-                if ( ! preg_match($route[1], $path , $regs ) ) {
+                if ( ! preg_match($route[1], (string) $path , $regs ) ) {
                     continue;
                 }
+
                 $route[3]['vars'] = $regs;
 
                 // validate request method
                 if ( isset($route[3]['method']) && $route[3]['method'] != $requestMethod )
                     continue;
+
                 if ( isset($route[3]['domain']) && $route[3]['domain'] != $_SERVER["HTTP_HOST"] )
                     continue;
+
                 if ( isset($route[3]['secure']) && $route[3]['secure'] && (!isset($_SERVER["HTTPS"]) || !$_SERVER["HTTPS"]) )
                     continue;
+
                 return $route;
             } else {
                 // prefix match is used when expanding is not enabled.
-                if ( ( is_int($route[2]) && strncmp($route[1], $path, strlen($route[1]) ) === 0 ) || $route[1] == $path ) {
+                if ( ( is_int($route[2]) && strncmp((string) $route[1], (string) $path, strlen((string) $route[1]) ) === 0 ) || $route[1] == $path ) {
                     // validate request method
                     if ( isset($route[3]['method']) && $route[3]['method'] != $requestMethod )
                         continue;
+
                     if ( isset($route[3]['domain']) && $route[3]['domain'] != $_SERVER["HTTP_HOST"] )
                         continue;
+
                     if ( isset($route[3]['secure']) && $route[3]['secure'] && (!isset($_SERVER["HTTPS"]) || !$_SERVER["HTTPS"]) )
                         continue;
+
                     return $route;
                 } else {
                     continue;
@@ -318,14 +313,14 @@ class Mux
                 // for pcre pattern?
                 if ($route[0]) {
                     $matchedString = $route[3]['vars'][0];
-                    return $submux->dispatch( substr($path, strlen($matchedString)) );
+                    return $submux->dispatch( substr((string) $path, strlen((string) $matchedString)) );
                 } else {
-                    $s = substr($path, strlen($route[1]));
                     return $submux->dispatch(
-                        substr($path, strlen($route[1])) ?: ''
+                        substr((string) $path, strlen((string) $route[1])) ?: ''
                     );
                 }
             }
+
             return $route;
         }
     }
@@ -351,15 +346,16 @@ class Mux
 
     public static function __set_state($array)
     {
-        $mux = new self;
-        $mux->routes = $array['routes'];
-        $mux->submux = $array['submux'];
-        $mux->expand = $array['expand'];
+        $self = new self;
+        $self->routes = $array['routes'];
+        $self->submux = $array['submux'];
+        $self->expand = $array['expand'];
         if ( isset($array['routesById']) ) {
-            $mux->routesById = $array['routesById'];
+            $self->routesById = $array['routesById'];
         }
-        $mux->id = $array['id'];
-        return $mux;
+
+        $self->id = $array['id'];
+        return $self;
     }
 
 }

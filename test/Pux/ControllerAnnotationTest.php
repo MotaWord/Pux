@@ -36,29 +36,24 @@ class ControllerAnnotationTest extends PHPUnit_Framework_TestCase
 
     public function testAnnotationForGetActionMethods()
     {
-        $con = new ChildController;
-        ok($con);
-        ok( $map = $con->getActionMethods() );
+        $childController = new ChildController;
+        ok($childController);
+        ok( $map = $childController->getActionMethods() );
         ok( is_array($map) );
 
         ok( isset($map['postAction']) );
         ok( isset($map['pageAction']) );
         ok( isset($map['subpageAction']) );
 
-        is( array(array(
-            "Route" => "/post",
-            "Method" => "POST"
-        ),array(
-            "class" => "ChildController"
-        )), $map['postAction'] );
+        is( [["Route" => "/post", "Method" => "POST"], ["class" => "ChildController"]], $map['postAction'] );
 
-        $routeMap = $con->getActionRoutes();
+        $routeMap = $childController->getActionRoutes();
         count_ok( 3, $routeMap );
 
-        list($path, $method, $options) = $routeMap[0];
+        [$path, $method, $options] = $routeMap[0];
         is('/page', $path);
         is('pageAction', $method);
-        is( array( 'method' => REQUEST_METHOD_GET ) , $options);
+        is( ['method' => REQUEST_METHOD_GET] , $options);
     }
 
 
@@ -69,12 +64,12 @@ class ControllerAnnotationTest extends PHPUnit_Framework_TestCase
             return;
         }
 
-        $controller = new ExpandableProductController;
-        ok($controller);
+        $expandableProductController = new ExpandableProductController;
+        ok($expandableProductController);
 
-        ok( is_array( $map = $controller->getActionMethods() ) );
+        ok( is_array( $map = $expandableProductController->getActionMethods() ) );
 
-        $routes = $controller->getActionRoutes();
+        $routes = $expandableProductController->getActionRoutes();
         is('', $routes[0][0], 'the path');
         is('indexAction', $routes[0][1], 'the mapping method');
         ok( is_array($routes) );
@@ -86,24 +81,18 @@ class ControllerAnnotationTest extends PHPUnit_Framework_TestCase
         // $mux->mount('/product', $submux );
 
         // gc scan bug
-        $mux->mount('/product', $controller->expand() );
+        $mux->mount('/product', $expandableProductController->expand() );
         ok($mux);
 
-        $paths = array(
-            '/product/delete' => 'DELETE',
-            '/product/update' => 'PUT' ,
-            '/product/add'    => 'POST' ,
-            '/product/foo/bar' => null,
-            '/product/item' => 'GET',
-            '/product' => null,
-        );
+        $paths = ['/product/delete' => 'DELETE', '/product/update' => 'PUT', '/product/add'    => 'POST', '/product/foo/bar' => null, '/product/item' => 'GET', '/product' => null];
 
         foreach( $paths as $path => $method ) {
-            if ( $method ) {
+            if ( $method !== null ) {
                 $_SERVER['REQUEST_METHOD'] = $method;
             } else {
                 $_SERVER['REQUEST_METHOD'] = 'GET';
             }
+
             ok( $mux->dispatch($path) , $path);
         }
     }

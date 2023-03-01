@@ -9,7 +9,9 @@ use Pux\Controller;
 class CRUDProductController extends Controller
 {
     public function indexAction() { }
-    public function addAction() { } 
+
+    public function addAction() { }
+
     public function delAction() { }
 }
 /*}}}*/
@@ -17,9 +19,9 @@ class CRUDProductController extends Controller
 class ControllerTest extends PHPUnit_Framework_TestCase
 {
     public function testControllerConstructor() {
-        $controller = new CRUDProductController;
-        ok($controller);
-        return $controller;
+        $crudProductController = new CRUDProductController;
+        ok($crudProductController);
+        return $crudProductController;
     }
 
 
@@ -62,7 +64,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
      */
     public function testToJson($controller)
     {
-        ok( $controller->toJson(array('foo' => 1) ) );
+        ok( $controller->toJson(['foo' => 1] ) );
     }
 
 
@@ -70,8 +72,8 @@ class ControllerTest extends PHPUnit_Framework_TestCase
      * @depends testControllerConstructor
      */
     public function testMountControllerObject($controller) {
-        $m = new Mux;
-        $m->mount( '/product' , $controller );
+        $mux = new Mux;
+        $mux->mount( '/product' , $controller );
     }
 
     /**
@@ -94,18 +96,18 @@ class ControllerTest extends PHPUnit_Framework_TestCase
         $mainMux = new Mux;
         $mainMux->expand = false;
         $mainMux->mount( '/product' , $controller);
-        $mainMux->any( '/' , array('ProductController', 'indexAction') );
+        $mainMux->any( '/' , ['ProductController', 'indexAction'] );
 
         ok( $mainMux->getRoutes() ); 
         count_ok( 2,  $mainMux->getRoutes(), 'route count should be 2' );
         ok( $r = $mainMux->dispatch('/product') , 'matched /product' ); // match indexAction
-        $this->assertSame( array('CRUDProductController','indexAction'), $r[2] );
+        $this->assertSame( ['CRUDProductController', 'indexAction'], $r[2] );
 
         ok( $r = $mainMux->dispatch('/product/add') );
-        $this->assertSame( array('CRUDProductController','addAction'), $r[2] );
+        $this->assertSame( ['CRUDProductController', 'addAction'], $r[2] );
 
         ok( $r = $mainMux->dispatch('/product/del') );
-        $this->assertSame( array('CRUDProductController','delAction'), $r[2] );
+        $this->assertSame( ['CRUDProductController', 'delAction'], $r[2] );
 
         ok( null == $mainMux->dispatch('/foo') );
         ok( null == $mainMux->dispatch('/bar') );

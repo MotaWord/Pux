@@ -11,7 +11,7 @@ class HelloController
 {
 
     public function helloAction($name) {
-        return "hello $name";
+        return sprintf('hello %s', $name);
     }
 
 }
@@ -19,11 +19,13 @@ class HelloController
 class ProductController
 {
     public function indexAction() { return 'index'; }
+
     public function fooAction() { return 'foo'; }
+
     public function barAction() { return 'bar'; }
 
     public function itemAction($id)  { 
-        return "product item $id";
+        return sprintf('product item %s', $id);
     }
 }
 
@@ -39,10 +41,7 @@ class PuxTest extends PHPUnit_Framework_ExtensionTestCase
 
     public function getFunctions()
     {
-        return array(
-            'pux_match',
-            'pux_sort_routes',
-        );
+        return ['pux_match', 'pux_sort_routes'];
     }
 
     public function testExtensionLoaded() 

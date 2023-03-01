@@ -1,0 +1,8 @@
+language: php
+php:
+- 5
+- 7
+before_script:
+  - phpenv rehash
+  - composer install
+script: phpunit

@@ -13,70 +13,34 @@ require 'SimpleBench.php';
 require '../src/Pux/PatternCompiler.php';
 use Pux\Mux;
 
-$mux = Pux\Mux::__set_state(array(
-  'id' => NULL,
-  'routes' => 
- array (
-   0 => 
-   array (
-     0 => false,
-     1 => '/hello',
-     2 => 
-     array (
-       0 => 'HelloController',
-       1 => 'helloAction',
-     ),
-     3 => 
-     array (
-     ),
-   ),
- ),
-  'routesById' => 
- array (
- ),
-  'staticRoutes' => 
- array (
- ),
-  'submux' => 
- array (
- ),
-  'expand' => true,
-)); /* version */
+$mux = Pux\Mux::__set_state(['id' => NULL, 'routes' => 
+ [0 => 
+[0 => false, 1 => '/hello', 2 => 
+[0 => 'HelloController', 1 => 'helloAction'], 3 => 
+[]]], 'routesById' => 
+ [], 'staticRoutes' => 
+ [], 'submux' => 
+ [], 'expand' => true]); /* version */
 
 
 $bench = new SimpleBench;
 $bench->setN( 10000 );
 
-$bench->iterate( 'match' , function() use ($mux) {
+$bench->iterate( 'match' , static function () use ($mux) {
     $route = $mux->match('/hello');
 });
 
-$bench->iterate( 'dispatch' , function() use ($mux) {
+$bench->iterate( 'dispatch' , static function () use ($mux) {
     $route = $mux->dispatch('/hello');
 });
 
-$bench->iterate( '__set_state' , function() {
-    $mux = Pux\Mux::__set_state(array(
-        'id' => NULL,
-        'routes' => 
-        array (
-        0 => 
-        array (
-            0 => false,
-            1 => '/hello',
-            2 => 
-            array (
-            0 => 'HelloController',
-            1 => 'helloAction',
-            ),
-            3 => 
-            array (),),
-        ),
-        'routesById' => array (),
-        'staticRoutes' => array (),
-        'submux' => array (),
-        'expand' => true,
-    )); /* version */
+$bench->iterate( '__set_state' , static function () {
+    $mux = Pux\Mux::__set_state(['id' => NULL, 'routes' => 
+    [0 => 
+    [0 => false, 1 => '/hello', 2 => 
+    [0 => 'HelloController', 1 => 'helloAction'], 3 => 
+    []]], 'routesById' => [], 'staticRoutes' => [], 'submux' => [], 'expand' => true]);
+    /* version */
 });
 
 $result = $bench->compare();

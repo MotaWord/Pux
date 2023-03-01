@@ -1,5 +1,10 @@
 CHANGELOG
 ==================
+Version 1.7.0
+- Php 8.2 update
+
+Version 1.6.0
+-
 
 Version 1.5.0
 

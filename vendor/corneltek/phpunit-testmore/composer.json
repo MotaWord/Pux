@@ -1,0 +1,11 @@
+{
+    "name": "corneltek\/phpunit-testmore",
+    "require": {
+        "php": ">=8.2.3"
+    },
+    "autoload": {
+        "files": [
+            "TestMore.php"
+        ]
+    }
+}
